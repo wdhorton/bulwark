@@ -408,6 +408,35 @@ def is_same_as(df, df_to_compare, **kwargs):
     return df
 
 
+def matches_regex(df, pattern, columns=None, **kwargs):
+    """Asserts that the values in `df`'s `columns` match `pattern`.
+
+    Args:
+        df (pd.DataFrame): Any pd.DataFrame.
+        pattern (str): Pattern to match against.
+        columns (list): A subset of columns to check for matching `pattern`.
+        **kwargs (dict): Keyword arguments passed through to pandas' ``Series.str.match``.
+
+    Returns:
+        Original `df`.
+
+    """
+    columns = columns if columns is not None else df.columns
+
+    non_matches_df = pd.DataFrame()
+
+    for col in columns:
+        matches = df[col].str.match(pattern, **kwargs).fillna(False)
+        if not matches.all():
+            non_matches_df[col] = ~matches
+
+    if not non_matches_df.empty:
+        msg = bad_locations(non_matches_df)
+        raise AssertionError(msg)
+
+    return df
+
+
 def multi_check(df, checks, warn=False):
     """Asserts that all checks pass.
 

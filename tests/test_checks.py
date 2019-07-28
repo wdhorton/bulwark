@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import re
+
 import pytest
 import numpy as np
 import pandas as pd
@@ -392,6 +394,60 @@ def test_is_same_as_with_kwargs():
     tm.assert_frame_equal(df, result)
 
     result = dc.IsSameAs(df_equal_float, check_dtype=False)(_noop)(df)  # todo see why this fails
+    tm.assert_frame_equal(df, result)
+
+
+def test_matches_regex():
+    df = pd.DataFrame({'A': ['aa', 'ab', 'ac'], 'B': ['ad', 'ae', 'a1']})
+    pattern = r'a.'
+    result = ck.matches_regex(df, pattern)
+    tm.assert_frame_equal(df, result)
+
+    result = dc.MatchesRegex(pattern)(_noop)(df)
+    tm.assert_frame_equal(df, result)
+
+    result = ck.matches_regex(df, pattern, columns=['A'])
+    tm.assert_frame_equal(df, result)
+
+    result = dc.MatchesRegex(pattern, columns=['A'])(_noop)(df)
+    tm.assert_frame_equal(df, result)
+
+    pattern = r'a[a-z]'
+    with pytest.raises(AssertionError):
+        ck.matches_regex(df, pattern, columns=['B'])
+        dc.MatchesRegex(pattern, columns=['B'])(_noop)(df)
+
+    pattern = r'aa'
+    with pytest.raises(AssertionError):
+        ck.matches_regex(df, pattern)
+        dc.MatchesRegex(pattern)(_noop)(df)
+
+    pattern = 'A.'
+    result = ck.matches_regex(df, pattern, case=False)
+    tm.assert_frame_equal(df, result)
+
+    result = dc.MatchesRegex(pattern, case=False)(_noop)(df)
+    tm.assert_frame_equal(df, result)
+
+    pattern = 'A.'
+    result = ck.matches_regex(df, pattern, flags=re.IGNORECASE)
+    tm.assert_frame_equal(df, result)
+
+    result = dc.MatchesRegex(pattern, flags=re.IGNORECASE)(_noop)(df)
+    tm.assert_frame_equal(df, result)
+
+    df = pd.DataFrame({'A': ['aa', 'ab', np.nan]})
+    pattern = 'a.'
+
+    # should raise because of the nan
+    with pytest.raises(AssertionError):
+        ck.matches_regex(df, pattern)
+        dc.MatchesRegex(pattern)(_noop)(df)
+
+    result = ck.matches_regex(df, pattern, na='az')
+    tm.assert_frame_equal(df, result)
+
+    result = dc.MatchesRegex(pattern, na='az')(_noop)(df)
     tm.assert_frame_equal(df, result)
 
 
