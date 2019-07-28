@@ -406,6 +406,15 @@ def test_matches_regex():
     result = dc.MatchesRegex(pattern)(_noop)(df)
     tm.assert_frame_equal(df, result)
 
+    pattern = r'aa'
+    with pytest.raises(AssertionError):
+        ck.matches_regex(df, pattern)
+        dc.MatchesRegex(pattern)(_noop)(df)
+
+
+def test_matches_regex_with_columns():
+    df = pd.DataFrame({'A': ['aa', 'ab', 'ac'], 'B': ['ad', 'ae', 'a1']})
+    pattern = r'a.'
     result = ck.matches_regex(df, pattern, columns=['A'])
     tm.assert_frame_equal(df, result)
 
@@ -417,11 +426,9 @@ def test_matches_regex():
         ck.matches_regex(df, pattern, columns=['B'])
         dc.MatchesRegex(pattern, columns=['B'])(_noop)(df)
 
-    pattern = r'aa'
-    with pytest.raises(AssertionError):
-        ck.matches_regex(df, pattern)
-        dc.MatchesRegex(pattern)(_noop)(df)
 
+def test_matches_regex_with_kwargs():
+    df = pd.DataFrame({'A': ['aa', 'ab', 'ac'], 'B': ['ad', 'ae', 'a1']})
     pattern = 'A.'
     result = ck.matches_regex(df, pattern, case=False)
     tm.assert_frame_equal(df, result)
